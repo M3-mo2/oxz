@@ -1383,6 +1383,17 @@ var aPosM=gl.getAttribLocation(progM,'aPos'), aColM=gl.getAttribLocation(progM,'
     uFogM=gl.getUniformLocation(progM,'uFog'), uFogNearM=gl.getUniformLocation(progM,'uFogNear'),
     uFogFarM=gl.getUniformLocation(progM,'uFogFar'), uSunM=gl.getUniformLocation(progM,'uSun');
 
+// sky shader: per-vertex colors, no fog/lighting
+var vsSky=['attribute vec3 aPos;','attribute vec3 aCol;','uniform mat4 uProj;','uniform mat4 uView;','varying vec3 vC;','void main(){vC=aCol; gl_Position=uProj*uView*vec4(aPos,1.0);}'].join('\n');
+var fsSky=['precision mediump float;','varying vec3 vC;','void main(){gl_FragColor=vec4(vC,1.0);}'].join('\n');
+var progSky=gl.createProgram();
+gl.attachShader(progSky,compileShader(gl.VERTEX_SHADER,vsSky));
+gl.attachShader(progSky,compileShader(gl.FRAGMENT_SHADER,fsSky));
+gl.linkProgram(progSky);
+var aPosSky=gl.getAttribLocation(progSky,'aPos'), aColSky=gl.getAttribLocation(progSky,'aCol'),
+    uProjSky=gl.getUniformLocation(progSky,'uProj'), uViewSky=gl.getUniformLocation(progSky,'uView');
+var skyColBuf=gl.createBuffer();
+
 makeAtlas();
 var tex=gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D,tex);
@@ -2393,6 +2404,11 @@ function render(){
     }
     var cx2=player.x, cy2=player.y, cz2=player.z;
     var domeR=200, domeSeg=12;
+    gl.useProgram(progSky);
+    gl.uniformMatrix4fv(uProjSky,false,projMat);
+    gl.uniformMatrix4fv(uViewSky,false,viewMat);
+    var skyVerts=[];
+    var skyCols=[];
     for(var si=0;si<domeSeg;si++){
       var t1=si/domeSeg, t2=(si+1)/domeSeg;
       var ang1=t1*Math.PI*0.5, ang2=t2*Math.PI*0.5;
@@ -2401,7 +2417,6 @@ function render(){
       var ringFrac1=t1, ringFrac2=t2;
       var cR1=lerp(skyR,horizonR,ringFrac1), cG1=lerp(skyG,horizonG,ringFrac1), cB1=lerp(skyB,horizonB,ringFrac1);
       var cR2=lerp(skyR,horizonR,ringFrac2), cG2=lerp(skyG,horizonG,ringFrac2), cB2=lerp(skyB,horizonB,ringFrac2);
-      var skyVerts=[];
       for(var sj=0;sj<8;sj++){
         var a1=sj/8*Math.PI*2, a2=(sj+1)/8*Math.PI*2;
         var x1=cx2+Math.cos(a1)*r1, z1=cz2+Math.sin(a1)*r1;
@@ -2409,16 +2424,24 @@ function render(){
         var x3=cx2+Math.cos(a1)*r2, z3=cz2+Math.sin(a1)*r2;
         var x4=cx2+Math.cos(a2)*r2, z4=cz2+Math.sin(a2)*r2;
         skyVerts.push(x1,y1,z1, x2,y1,z2, x3,y2,z3);
+        skyCols.push(cR1,cG1,cB1, cR1,cG1,cB1, cR2,cG2,cB2);
         skyVerts.push(x2,y1,z2, x4,y2,z4, x3,y2,z3);
+        skyCols.push(cR1,cG1,cB1, cR2,cG2,cB2, cR2,cG2,cB2);
       }
-      gl.bindBuffer(gl.ARRAY_BUFFER,cloudVBO);
-      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(skyVerts),gl.DYNAMIC_DRAW);
-      gl.enableVertexAttribArray(aPosF);
-      gl.vertexAttribPointer(aPosF,3,gl.FLOAT,false,0,0);
-      var avgR=(cR1+cR2)*0.5, avgG=(cG1+cG2)*0.5, avgB=(cB1+cB2)*0.5;
-      gl.uniform4f(uColF,avgR,avgG,avgB,1.0);
-      gl.drawArrays(gl.TRIANGLES,0,skyVerts.length/3);
     }
+    var skyBuf=skyVerts.length/3;
+    gl.bindBuffer(gl.ARRAY_BUFFER,cloudVBO);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(skyVerts),gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(aPosSky);
+    gl.vertexAttribPointer(aPosSky,3,gl.FLOAT,false,0,0);
+    gl.bindBuffer(gl.ARRAY_BUFFER,skyColBuf);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(skyCols),gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(aColSky);
+    gl.vertexAttribPointer(aColSky,3,gl.FLOAT,false,0,0);
+    gl.drawArrays(gl.TRIANGLES,0,skyBuf);
+    gl.useProgram(progF);
+    gl.uniformMatrix4fv(uProjF,false,projMat);
+    gl.uniformMatrix4fv(uViewF,false,viewMat);
 
     // Sun
     if(dayT>0.05&&dayT<0.95){
@@ -2564,9 +2587,9 @@ function render(){
     var cloudAlpha=0.3+0.2*sunLevel;
     if(weather.type==='rain'||weather.type==='storm') cloudAlpha*=1.3;
     var cloudTint=clamp01(1-Math.abs(dayT-0.5)*5);
-    var cR=lerp(1,fogColor[0]*1.3,cloudTint*0.35);
-    var cG=lerp(1,fogColor[1]*1.2,cloudTint*0.35);
-    var cB=lerp(1,fogColor[2]*1.1,cloudTint*0.35);
+    var cR=lerp(1,Math.min(fogColor[0]*1.3,1),cloudTint*0.35);
+    var cG=lerp(1,Math.min(fogColor[1]*1.2,1),cloudTint*0.35);
+    var cB=lerp(1,Math.min(fogColor[2]*1.1,1),cloudTint*0.35);
     gl.uniform4f(uColF,cR,cG,cB,cloudAlpha);
     gl.drawArrays(gl.TRIANGLES,0,verts.length/3);
   }
