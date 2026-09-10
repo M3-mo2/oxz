@@ -1,34 +1,8 @@
 {
-  "task": "عايز دراسه وتحسين الجرافيك وجعله افضل بكثير",
+  "task": "في مشكله فالجرافيك بتاع اللعبه، عايزك تشوف الجرافيك كله لان اخر تعديلات علي تحسين الجرافيك منجحتش صلحها بالكامل",
   "max_cycles": 30,
-  "cycle": 3,
-  "status": "clean",
+  "cycle": 0,
+  "status": "building",
   "findings": [],
-  "history": [
-    {
-      "agent": "review",
-      "cycle": 0,
-      "result": "issues_found"
-    },
-    {
-      "agent": "review",
-      "cycle": 1,
-      "result": "issues_found"
-    },
-    {
-      "agent": "review",
-      "cycle": 2,
-      "result": "issues_found"
-    },
-    {
-      "agent": "review",
-      "cycle": 3,
-      "result": "clean"
-    },
-    {
-      "agent": "verify",
-      "cycle": 3,
-      "result": "clean"
-    }
-  ]
+  "history": []
 }
