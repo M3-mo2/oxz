@@ -1,7 +1,7 @@
 {
   "task": "في مشكله فالجرافيك بتاع اللعبه، عايزك تشوف الجرافيك كله لان اخر تعديلات علي تحسين الجرافيك منجحتش صلحها بالكامل",
   "max_cycles": 30,
-  "cycle": 0,
+  "cycle": 1,
   "status": "issues_found",
   "findings": [
     {
@@ -18,6 +18,10 @@
     }
   ],
   "history": [
-    {"agent":"review","cycle":0,"result":"issues_found"}
+    {
+      "agent": "review",
+      "cycle": 0,
+      "result": "issues_found"
+    }
   ]
 }
