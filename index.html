@@ -1518,18 +1518,20 @@ function buildChunkMesh(c){
         else if(d[0]!==0){t1y=1;t2z=1;}
         else{t1x=1;t2y=1;}
         var ao=[0,0,0,0];
-        for(var k=0;k<4;k++){
-          var cn=corners[k];
+        var uIdx=[0,1,2,5];
+        for(var qi=0;qi<4;qi++){
+          var cn=corners[uIdx[qi]];
           var vx2=ox+lx+cn[0], vy2=y+cn[1], vz2=oz+lz+cn[2];
           var s1=isSolid(getBlock(vx2+t1x, vy2+t1y, vz2+t1z))?1:0;
           var s2=isSolid(getBlock(vx2+t2x, vy2+t2y, vz2+t2z))?1:0;
           var s3=isSolid(getBlock(vx2+t1x+t2x, vy2+t1y+t2y, vz2+t1z+t2z))?1:0;
-          ao[k]=aoVal(s1,s2,s3);
+          ao[qi]=aoVal(s1,s2,s3);
         }
-        var ai=[[0,1,2],[0,2,3]];
-        if(ao[0]+ao[2]>ao[1]+ao[3]) ai=[[0,1,3],[1,2,3]];
+        var flip=ao[0]+ao[2]>ao[1]+ao[3];
+        var cAO=[0,1,2,0,2,3];
+        var triList=flip?[[0,1,5],[1,2,5]]:[[0,1,2],[0,2,5]];
         for(var ti=0;ti<2;ti++){
-          var tri=ai[ti];
+          var tri=triList[ti];
           for(var ti2=0;ti2<3;ti2++){
             var k=tri[ti2];
             var cn=corners[k];
@@ -1537,7 +1539,7 @@ function buildChunkMesh(c){
             if(cn[1]===1) vy-=yTopDrop;
             var u=cn[3]?tu1:tu0;
             var v=1-(cn[4]?tv1:tv0);
-            var shade=FACES[f].shade*(0.50+0.50*ao[k]);
+            var shade=FACES[f].shade*(0.50+0.50*ao[cAO[k]]);
             arr.push(vx,vy,vz, u,v, shade);
           }
         }
@@ -2547,12 +2549,17 @@ function render(){
     drawChunkBuf(c,false);
   });
   gl.depthMask(false);
+  var tList=[];
   chunks.forEach(function(c){
+    if(!c.meshed||c.nT<=0) return;
     var ccx=c.cx*CHUNK+8, ccz=c.cz*CHUNK+8;
     var dx=ccx-ex, dz=ccz-ez;
-    if(dx*dx+dz*dz>95*95||!c.meshed) return;
-    drawChunkBuf(c,true);
+    var d2=dx*dx+dz*dz;
+    if(d2>95*95) return;
+    tList.push({c:c,d:d2});
   });
+  tList.sort(function(a,b){return b.d-a.d;});
+  for(var ti=0;ti<tList.length;ti++) drawChunkBuf(tList[ti].c,true);
   gl.depthMask(true);
   renderMobsEtc();
   renderParticles();

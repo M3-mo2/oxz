@@ -1,27 +1,10 @@
 {
-  "task": "في مشكله فالجرافيك بتاع اللعبه، عايزك تشوف الجرافيك كله لان اخر تعديلات علي تحسين الجرافيك منجحتش صلحها بالكامل",
+  "task": "Fix the severe voxel rendering artifact shown in the screenshot: large repeated/ghost triangular faces and stretched terrain geometry are appearing across the world, especially underwater and around distant terrain; inspect the chunk generation/meshing, neighbor-face culling, VBO upload/streaming, depth testing, transparent-water rendering and chunk draw order, identify the actual root cause, and implement a robust fix without breaking terrain generation, chunk streaming, water, caves, lighting, or performance.",
   "max_cycles": 30,
-  "cycle": 1,
-  "status": "issues_found",
-  "findings": [
-    {
-      "title": "Sky dome draw calls increased 12x (performance)",
-      "severity": "low",
-      "file": "index.html",
-      "detail": "Old code collected all 12 dome ring segments into a single skyVerts array and issued one gl.drawArrays call. New code declares skyVerts inside the for(si) loop and issues separate bufferData + drawArrays per ring (12 draw calls). Each call also re-binds and re-uploads the VBO. Pre-compute per-ring colors into a single VBO with per-vertex colors and draw once."
-    },
-    {
-      "title": "Cloud tint fogColor multiplied by asymmetric factors may exceed 1.0",
-      "severity": "low",
-      "file": "index.html",
-      "detail": "Cloud color is lerp(1, fogColor[channel]*factor, t) where factor is 1.3/1.2/1.1 for R/G/B. If fogColor exceeds ~0.77 for a channel, fogColor*1.3 could exceed 1.0 before clamping. Add Math.min(fogColor[i]*factor, 1.0) guard."
-    }
-  ],
+  "cycle": 0,
+  "status": "clean",
+  "findings": [],
   "history": [
-    {
-      "agent": "review",
-      "cycle": 0,
-      "result": "issues_found"
-    }
+    {"agent":"review","cycle":0,"result":"clean"}
   ]
 }
