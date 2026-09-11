@@ -2180,6 +2180,7 @@ function renderMobsEtc(){
   gl.vertexAttribPointer(aPosM,3,gl.FLOAT,false,24,0);
   gl.vertexAttribPointer(aColM,3,gl.FLOAT,false,24,12);
   gl.drawArrays(gl.TRIANGLES,0,arr.length/6);
+  gl.disableVertexAttribArray(aPosM); gl.disableVertexAttribArray(aColM);
 }
 
 // ---------- Particle system ----------
@@ -2236,6 +2237,7 @@ function renderParticles(){
   gl.drawArrays(gl.TRIANGLES,0,arr.length/6);
   gl.depthMask(true);
   gl.enable(gl.CULL_FACE);
+  gl.disableVertexAttribArray(aPosM); gl.disableVertexAttribArray(aColM);
 }
 
 // ---------- Weather (rain / snow / storm) ----------
@@ -2339,8 +2341,13 @@ function renderWeather(){
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(aPosF);
   gl.vertexAttribPointer(aPosF,3,gl.FLOAT,false,0,0);
+  gl.depthMask(false);
+  gl.disable(gl.CULL_FACE);
   if(rain){ var rR=lerp(0.6,fogColor[0],0.3), rG=lerp(0.72,fogColor[1],0.3), rB=lerp(1.0,fogColor[2],0.2); gl.uniform4f(uColF,rR,rG,rB,storm?0.65:0.5); gl.drawArrays(gl.LINES,0,arr.length/3); }
   else { var sR=lerp(1,fogColor[0],0.15), sG=lerp(1,fogColor[1],0.15), sB=lerp(1,fogColor[2],0.1); gl.uniform4f(uColF,sR,sG,sB,0.85); gl.drawArrays(gl.LINES,0,arr.length/3); }
+  gl.depthMask(true);
+  gl.enable(gl.CULL_FACE);
+  gl.disableVertexAttribArray(aPosF);
   if(lightningFlash>0){
     if(lightningFlashEl){lightningFlashEl.style.opacity=lightningFlash*0.85;}
   } else {
@@ -2374,7 +2381,14 @@ function drawChunkBuf(c, transparent){
   gl.vertexAttribPointer(aShade,1,gl.FLOAT,false,24,20);
   gl.drawArrays(gl.TRIANGLES,0,n);
 }
+function disableAllAttribs(){
+  gl.disableVertexAttribArray(aPos); gl.disableVertexAttribArray(aUV); gl.disableVertexAttribArray(aShade);
+  gl.disableVertexAttribArray(aPosF);
+  gl.disableVertexAttribArray(aPosM); gl.disableVertexAttribArray(aColM);
+  gl.disableVertexAttribArray(aPosSky); gl.disableVertexAttribArray(aColSky);
+}
 function render(){
+  disableAllAttribs();
   gl.useProgram(prog);
   gl.uniformMatrix4fv(uProj,false,projMat);
   gl.uniformMatrix4fv(uView,false,viewMat);
@@ -2441,9 +2455,11 @@ function render(){
     gl.enableVertexAttribArray(aColSky);
     gl.vertexAttribPointer(aColSky,3,gl.FLOAT,false,0,0);
     gl.drawArrays(gl.TRIANGLES,0,skyBuf);
+    gl.disableVertexAttribArray(aPosSky); gl.disableVertexAttribArray(aColSky);
     gl.useProgram(progF);
     gl.uniformMatrix4fv(uProjF,false,projMat);
     gl.uniformMatrix4fv(uViewF,false,viewMat);
+    gl.enableVertexAttribArray(aPosF);
 
     // Sun
     if(dayT>0.05&&dayT<0.95){
@@ -2504,6 +2520,8 @@ function render(){
       gl.drawArrays(gl.TRIANGLES,0,moonV.length/3);
     }
 
+    gl.disableVertexAttribArray(aPosF);
+
     // Stars at night
     if(dayT<0.15||dayT>0.85){
       var nightness2=dayT<0.15?(0.15-dayT)/0.15:(dayT-0.85)/0.15;
@@ -2534,7 +2552,10 @@ function render(){
         gl.enableVertexAttribArray(aPosM); gl.enableVertexAttribArray(aColM);
         gl.vertexAttribPointer(aPosM,3,gl.FLOAT,false,24,0);
         gl.vertexAttribPointer(aColM,3,gl.FLOAT,false,24,12);
+        gl.depthMask(false);
         gl.drawArrays(gl.TRIANGLES,0,starV.length/6);
+        gl.depthMask(true);
+        gl.disableVertexAttribArray(aPosM); gl.disableVertexAttribArray(aColM);
       }
     }
 
@@ -2601,6 +2622,7 @@ function render(){
     gl.drawArrays(gl.TRIANGLES,0,verts.length/3);
   }
   gl.depthMask(true);
+  gl.disableVertexAttribArray(aPosF);
   if(selectedBlock){
     var b=selectedBlock;
     var x0=b.x,y0=b.y,z0=b.z,x1=x0+1,y1=y0+1,z1=z0+1;
@@ -2610,11 +2632,16 @@ function render(){
       x0,y1,z0, x1,y1,z0, x1,y1,z0, x1,y1,z1, x1,y1,z1, x0,y1,z1, x0,y1,z1, x0,y1,z0,
       x0,y0,z0, x0,y1,z0, x1,y0,z0, x1,y1,z0, x1,y0,z1, x1,y1,z1, x0,y0,z1, x0,y1,z1
     ];
+    gl.useProgram(progF);
+    gl.uniformMatrix4fv(uProjF,false,projMat);
+    gl.uniformMatrix4fv(uViewF,false,viewMat);
     gl.bindBuffer(gl.ARRAY_BUFFER,selVBO);
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(L),gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(aPosF);
     gl.vertexAttribPointer(aPosF,3,gl.FLOAT,false,0,0);
     gl.uniform4f(uColF,0,0,0,0.9);
     gl.drawArrays(gl.LINES,0,L.length/3);
+    gl.disableVertexAttribArray(aPosF);
   }
   gl.enable(gl.CULL_FACE);
   renderWeather();
