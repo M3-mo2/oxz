@@ -2,7 +2,9 @@
   "task": "Fix the severe voxel rendering artifact shown in the screenshot: large repeated/ghost triangular faces and stretched terrain geometry are appearing across the world, especially underwater and around distant terrain; inspect the chunk generation/meshing, neighbor-face culling, VBO upload/streaming, depth testing, transparent-water rendering and chunk draw order, identify the actual root cause, and implement a robust fix without breaking terrain generation, chunk streaming, water, caves, lighting, or performance.",
   "max_cycles": 30,
   "cycle": 0,
-  "status": "building",
+  "status": "clean",
   "findings": [],
-  "history": []
+  "history": [
+    {"agent":"review","cycle":0,"result":"clean"}
+  ]
 }
