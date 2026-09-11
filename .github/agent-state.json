@@ -1,8 +1,10 @@
 {
   "task": "في مشكله فالجرافيك بتاع اللعبه، عايزك تشوف الجرافيك كله لان اخر تعديلات علي تحسين الجرافيك منجحتش صلحها بالكامل",
   "max_cycles": 30,
-  "cycle": 0,
-  "status": "building",
+  "cycle": 1,
+  "status": "clean",
   "findings": [],
-  "history": []
+  "history": [
+    {"agent":"review","cycle":1,"result":"clean"}
+  ]
 }
