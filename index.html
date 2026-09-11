@@ -1284,7 +1284,7 @@ function makeAtlas(){
   tile(20, function(x,y){ if(x%4===0) return vary('#2a6b1e',12); return vary('#3f9140',16); });  // Cactus side
   tile(21, function(x,y){ var dx=x-8,dy=y-8; if((dx*dx+dy*dy)<36) return vary('#6ab85a',12); return vary('#3f9140',14); });  // Cactus top
   tile(22, function(){ var v=trnd(); if(v<0.15) return vary('#a02010',22); return vary('#8b1a0e',18); });  // Netherrack - more texture
-  tile(23, function(x,y){ var v=Math.sin(x*0.8+y*0.6)*0.3+0.5; var pulse=Math.sin(perfTime*2+x*0.5)*0.1; return 'rgb('+Math.floor(80+v*60+pulse*30)+','+Math.floor(20+v*30+pulse*10)+','+Math.floor(180+v*60+pulse*20)+')'; });  // Portal - animated
+  tile(23, function(x,y){ var v=Math.sin(x*0.8+y*0.6)*0.3+0.5; return 'rgb('+Math.floor(80+v*60)+','+Math.floor(20+v*30)+','+Math.floor(180+v*60)+')'; });  // Portal - static purple
   tile(24, function(){ return vary('#1a0a2e',10); });  // Obsidian
   tile(25, function(){ var r=trnd(); if(r<0.12) return vary('#4a2d12',12); return vary('#6b4a2a',14); });  // Soul Sand
   tile(26, function(){ var r=trnd(); if(r<0.35) return vary('#ffee55',18); if(r<0.5) return vary('#ffcc22',14); return vary('#ffaa22',12); });  // Glowstone - brighter
@@ -2404,6 +2404,7 @@ function render(){
 
   // --- Sky dome with gradient ---
   if(currentDimension!=='nether'){
+    gl.disableVertexAttribArray(aPos); gl.disableVertexAttribArray(aUV); gl.disableVertexAttribArray(aShade);
     gl.useProgram(progF);
     gl.uniformMatrix4fv(uProjF,false,projMat);
     gl.uniformMatrix4fv(uViewF,false,viewMat);
@@ -2562,6 +2563,19 @@ function render(){
     gl.depthMask(true);
     gl.enable(gl.CULL_FACE);
   }
+  // --- Restore main chunk shader before drawing terrain ---
+  gl.useProgram(prog);
+  gl.uniformMatrix4fv(uProj,false,projMat);
+  gl.uniformMatrix4fv(uView,false,viewMat);
+  gl.uniform3f(uFog,fogColor[0],fogColor[1],fogColor[2]);
+  gl.uniform1f(uFogNear,30); gl.uniform1f(uFogFar,100);
+  gl.uniform1f(uSun,sunLevel);
+  gl.uniform1f(uTime,perfTime);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.uniform1i(uTex,0);
+  gl.enableVertexAttribArray(aPos); gl.enableVertexAttribArray(aUV); gl.enableVertexAttribArray(aShade);
+  gl.enable(gl.CULL_FACE);
+  gl.depthMask(true);
   var ex=player.x, ez=player.z;
   chunks.forEach(function(c){
     var ccx=c.cx*CHUNK+8, ccz=c.cz*CHUNK+8;
